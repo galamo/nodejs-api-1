@@ -3,21 +3,31 @@ const express = require("express")
 const data = require("./data.json")
 const logger = require("jbapp-logger");
 const { isValidDates } = require("./utils")
+const bodyParser = require("body-parser");
 const api = express()
-
-// const currentDate = moment(1572886068504);
-// console.log(currentDate.format("DD-MM-YY hh:mm:ss"))
-// console.log(currentDate.isValid())
 const port = 4000;
+const users = []
 
-// url for entry point
-// 1. req
-// 2. res 
-// 3. next
-
-
-
+api.use(bodyParser.json())
+api.use((req, res, next) => {
+    console.log(`inside middleware 3:  ${req.path}`)
+    next();
+})
+api.use("/", (req, res, next) => {
+    // 1. res is accessible
+    // 2. req is accessible
+    // 3. next function execution
+    console.log("this is the first middleware...")
+    req.middleware = "apiKey1234";
+    console.log(`inside middleware 1:  ${req.path}`)
+    next();
+})
+api.use("/", (req, res, next) => {
+    console.log(`inside middleware 2:  ${req.path}`)
+    next();
+})
 api.get("/message", (req, res, next) => {
+    console.log(req.middleware)
     console.log("start req...", req.ip)
     //query params
     const { userName, password } = req.query;
@@ -25,14 +35,36 @@ api.get("/message", (req, res, next) => {
     console.log(userName + " " + password)
     return res.send(`User Details: ${userName} , ${password}`);
 })
-
-api.get("/booking", (req, res, next) => {
-    const { from, to, dest } = req.query;
+api.use("/booking", (req, res, next) => {
+    const { from, to } = req.query;
     if (!isValidDates([from, to])) return res.send("error")
+    next();
+})
+api.get("/booking/flight", (req, res, next) => {
+    console.log(req.middleware)
+    const { from, to, dest } = req.query;
+    // if (!isValidDates([from, to])) return res.send("error")
+    if (!from || !dest || !to) return res.send("You are wrong! , please try again!!")
+    return res.send(`You booked: ${dest} ,  from: ${from} to: ${to}`);
+})
+api.get("/booking/vacation", (req, res, next) => {
+    console.log(req.middleware)
+    const { from, to, dest } = req.query;
+    // if (!isValidDates([from, to])) return res.send("error")
     if (!from || !dest || !to) return res.send("You are wrong! , please try again!!")
     return res.send(`You booked: ${dest} ,  from: ${from} to: ${to}`);
 })
 
+
+api.post("/users", (req, res, next) => {
+    const { userName, age, password } = req.body
+    users.push({ userName, age, password })
+    res.send(`Registration succeeded ${userName} ${age} ${password}`)
+})
+
+api.get("/users", (req, res, next) => {
+    res.json(users)
+})
 
 
 
