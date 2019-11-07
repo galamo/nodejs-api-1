@@ -1,6 +1,5 @@
 const moment = require("moment")
 
-
 function isValidDates(dates) {
     return !dates.some((date) => {
         const mDate = moment(date)
